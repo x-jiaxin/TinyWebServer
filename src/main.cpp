@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "threadpool.h"
+#include "connectpool.h"
 using std::cin;
 using std::cout;
 using std::endl;
@@ -14,5 +15,6 @@ int main()
     p = new threadpool();
     cout << "new\n";
     delete p;
+    connectpool p1;
     return EXIT_SUCCESS;
 }

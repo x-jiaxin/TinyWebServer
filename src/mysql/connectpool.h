@@ -10,6 +10,9 @@ using std::cin;
 using std::cout;
 using std::endl;
 class connectpool
-{};
+{
+public:
+    connectpool();
+};
 
 #endif//TINYWEBSERVER_CONNECTPOOL_H

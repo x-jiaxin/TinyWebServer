@@ -3,3 +3,7 @@
 //
 
 #include "connectpool.h"
+connectpool::connectpool()
+{
+    cout << "connectpool\n";
+}

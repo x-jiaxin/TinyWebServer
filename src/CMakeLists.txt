@@ -5,6 +5,11 @@ include_directories(mysql)
 
 add_executable(main main.cpp)
 
-add_subdirectory(threadpool)
 
-#target_link_libraries(main THREAD_POOL)
+aux_source_directory(./threadpool SOURCE)
+aux_source_directory(./Log SOURCE)
+aux_source_directory(./mysql SOURCE)
+aux_source_directory(./http SOURCE)
+
+add_library(MyLib ${SOURCE})
+target_link_libraries(main MyLib)
