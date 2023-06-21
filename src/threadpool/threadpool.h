@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include "lock.h"
+#include "connectpool.h"
 using std::cin;
 using std::cout;
 using std::endl;
