@@ -9,6 +9,6 @@ using std::cout;
 using std::endl;
 int main()
 {
-    threadpool<void> p;
+    threadpool<void> p(0, nullptr);
     return EXIT_SUCCESS;
 }

@@ -23,7 +23,6 @@ template<typename T>
 class threadpool
 {
 public:
-    threadpool() = default;
     threadpool(int actor_model, connectpool *conn_pool, int thread_number = 8,
                int max_request = 10000);
     ~threadpool();
@@ -33,7 +32,7 @@ public:
 private:
     /*工作线程运行的函数，从工作队列中取出任务并执行*/
     static void *worker(void *arg);
-    void run();
+    [[noreturn]] void run();
 
 private:
     int m_thread_number;
@@ -55,12 +54,12 @@ threadpool<T>::~threadpool()
 template<typename T>
 threadpool<T>::threadpool(int actor_model, connectpool *conn_pool,
                           int thread_number, int max_request)
+    : m_thread_number(thread_number), m_max_requests(max_request),
+      m_threads(nullptr), m_conn_pool(conn_pool), m_actor_model(actor_model)
 {
     if (thread_number <= 0 || max_request <= 0) {
         throw std::runtime_error("thread_number max_request <= 0!");
     }
-    m_thread_number = thread_number;
-    m_max_requests = max_request;
     m_threads = new pthread_t[thread_number];
     if (!m_threads) {
         throw std::runtime_error("m_threads fail!");
@@ -70,22 +69,67 @@ threadpool<T>::threadpool(int actor_model, connectpool *conn_pool,
 template<typename T>
 bool threadpool<T>::append(T *request, int state)
 {
-    return false;
+    m_queue_lock.lock();
+    if (m_work_queue.size() > m_max_requests) {
+        m_queue_lock.unlock();
+        return false;
+    }
+
+    m_work_queue.push_back(request);
+    request->m_state = state;
+    m_queue_stat.post();
+    m_queue_lock.unlock();
+    return true;
 }
 
 template<typename T>
 bool threadpool<T>::append_p(T *request)
 {
-    return false;
+    m_queue_lock.lock();
+    if (m_work_queue.size() > m_max_requests) {
+        m_queue_lock.unlock();
+        return false;
+    }
+
+    m_work_queue.push_back(request);
+    m_queue_stat.post();
+    m_queue_lock.unlock();
+    return true;
 }
 
+/*静态函数*/
 template<typename T>
 void *threadpool<T>::worker(void *arg)
 {
-    return nullptr;
+    auto pool = (threadpool<T> *)arg;
+    pool->run();
+    return pool;
 }
 
+/*从工作队列中取任务。进行处理*/
 template<typename T>
-void threadpool<T>::run()
-{}
+[[noreturn]] void threadpool<T>::run()
+{
+    while (true) {
+        m_queue_stat.wait();
+        m_queue_lock.lock();
+        if (m_work_queue.empty()) {
+            m_queue_lock.unlock();
+            continue;
+        }
+        T *request = m_work_queue.front();
+        m_work_queue.pop_front();
+        m_queue_lock.unlock();
+        if (!request) {
+            continue;
+        }
+        if (m_actor_model == 1) {
+            //todo 线程池run()
+        }
+        else {
+            connectionRAII conn(&request->mysql, m_conn_pool);
+            request->process();
+        }
+    }
+}
 #endif//TINYWEBSERVER_THREADPOOL_H
