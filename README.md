@@ -14,7 +14,6 @@
 
 1. chmod +x setup.sh
 2. ./setup.sh
-3. hhh
 
 #### 使用说明
 
