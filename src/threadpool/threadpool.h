@@ -64,6 +64,16 @@ threadpool<T>::threadpool(int actor_model, connectpool *conn_pool,
     if (!m_threads) {
         throw std::runtime_error("m_threads fail!");
     }
+    for (int i = 0; i < m_thread_number; ++i) {
+        if (pthread_create(m_threads + i, nullptr, worker, this) != 0) {
+            delete[] m_threads;
+            throw std::runtime_error("pthread_create fail!");
+        }
+        if (pthread_detach(m_threads[i]) != 0) {
+            delete[] m_threads;
+            throw std::runtime_error("pthread_detach fail!");
+        }
+    }
 }
 
 template<typename T>
