@@ -3,14 +3,12 @@
 //
 
 #include <iostream>
-#include "threadpool.h"
 #include "connectpool.h"
 using std::cin;
 using std::cout;
 using std::endl;
 int main()
 {
-    //    threadpool p;
     auto url = "localhost", username = "root", passwd = "123456";
     int port = 3306;
     const char *DBname = "DB1";
