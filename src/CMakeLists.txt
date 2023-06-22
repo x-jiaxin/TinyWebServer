@@ -9,8 +9,9 @@ set(MYSQL_LIBS
 
 include_directories(threadpool mysql Log Lock)
 
-add_executable(test_connpool test_connpool.cpp)
-add_executable(test_threadpool test_threadpool.cpp)
+#add_executable(test_connpool test_connpool.cpp)
+#add_executable(test_threadpool test_threadpool.cpp)
+add_executable(test_log test_log.cpp)
 
 #add_library(MyLib "")
 #target_sources(MyLib
@@ -27,6 +28,6 @@ aux_source_directory(./mysql SOURCE)
 aux_source_directory(./http SOURCE)
 add_library(MyLib ${SOURCE})
 
-target_link_libraries(test_connpool MyLib ${MYSQL_LIBS})
-target_link_libraries(test_threadpool MyLib)
+#target_link_libraries(test_connpool MyLib ${MYSQL_LIBS})
+target_link_libraries(test_log MyLib)
 
