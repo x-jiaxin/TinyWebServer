@@ -125,12 +125,19 @@ public:
         return true;
     }
 
+    //pop时,如果当前队列没有元素,将会等待条件变量
     bool pop(T &elem)
     {
         m_mutex.lock();
         while (m_cur_size <= 0) {
+            /* timeval now{};
+            gettimeofday(&now, nullptr);
+            timespec s{now.tv_sec + 5, now.tv_usec * 1000};
+            if (!m_condation.timewait(m_mutex.get(), s)) {*/
+
             // m_condation.wait()前，互斥锁必须已上锁
             if (!m_condation.wait(m_mutex.get())) {
+                printf("!!\n");
                 m_mutex.unlock();
                 return false;
             }

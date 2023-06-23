@@ -7,6 +7,7 @@
 
 #include <exception>
 #include <pthread.h>
+#include <sys/time.h>
 #include <semaphore.h>
 
 class sem
@@ -69,7 +70,7 @@ public:
     }
 
 private:
-    pthread_mutex_t m_mutex{};
+    pthread_mutex_t m_mutex;
 };
 
 class cond
@@ -95,6 +96,8 @@ public:
     {
         int ret;
         //        pthread_mutex_lock(&m_mutex);
+        //        ret = pthread_cond_wait(&m_cond, mutex);
+
         ret = pthread_cond_wait(&m_cond, mutex);
         //        pthread_mutex_unlock(&m_mutex);
         return ret == 0;
