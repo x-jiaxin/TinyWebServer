@@ -137,7 +137,6 @@ public:
 
             // m_condation.wait()前，互斥锁必须已上锁
             if (!m_condation.wait(m_mutex.get())) {
-                printf("!!\n");
                 m_mutex.unlock();
                 return false;
             }
