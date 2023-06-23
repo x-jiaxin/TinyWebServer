@@ -13,9 +13,9 @@ int main()
     Log::getInstance()->init("/home/jiaxin/Code/TinyWebServer/log/a.log", 0,
                              2000, 800000, 800);
 
-    LOG_ERROR("error test");
-    LOG_DEBUG("debug test");
-    LOG_INFO("info test");
-    LOG_WARN("warn test");
+    LOG_ERROR("error test")
+    LOG_DEBUG("debug test")
+    LOG_INFO("info test")
+    LOG_WARN("warn test")
     return 0;
 }
