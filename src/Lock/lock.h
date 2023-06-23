@@ -63,6 +63,11 @@ public:
         return pthread_mutex_unlock(&m_mutex) == 0;
     }
 
+    pthread_mutex_t *get()
+    {
+        return &m_mutex;
+    }
+
 private:
     pthread_mutex_t m_mutex{};
 };
@@ -72,34 +77,48 @@ class cond
 public:
     cond()
     {
-        if (pthread_mutex_init(&m_mutex, nullptr) != 0) {
+        /*        if (pthread_mutex_init(&m_mutex, nullptr) != 0) {
             throw std::exception();
-        }
+        }*/
         if (pthread_cond_init(&m_cond, nullptr) != 0) {
-            pthread_mutex_destroy(&m_mutex);
+            //            pthread_mutex_destroy(&m_mutex);
             throw std::exception();
         }
     }
     ~cond()
     {
-        pthread_mutex_destroy(&m_mutex);
+        //        pthread_mutex_destroy(&m_mutex);
         pthread_cond_destroy(&m_cond);
     }
-    bool wait()
+
+    bool wait(pthread_mutex_t *mutex)
     {
         int ret;
-        pthread_mutex_lock(&m_mutex);
-        ret = pthread_cond_wait(&m_cond, &m_mutex);
-        pthread_mutex_unlock(&m_mutex);
+        //        pthread_mutex_lock(&m_mutex);
+        ret = pthread_cond_wait(&m_cond, mutex);
+        //        pthread_mutex_unlock(&m_mutex);
         return ret == 0;
     }
+
+    //唤醒一个等待条件变量的线程
     bool signal()
     {
         return pthread_cond_signal(&m_cond) == 0;
     }
 
+    //广播唤醒等待条件变量的线程
+    bool broadcast()
+    {
+        return pthread_cond_broadcast(&m_cond) == 0;
+    }
+
+    bool timewait(pthread_mutex_t *mutex, struct timespec &t)
+    {
+        return pthread_cond_timedwait(&m_cond, mutex, &t) == 0;
+    }
+
 private:
-    pthread_mutex_t m_mutex{};
+    //    pthread_mutex_t m_mutex{};
     pthread_cond_t m_cond{};
 };
 #endif//TINYWEBSERVER_LOCK_H
