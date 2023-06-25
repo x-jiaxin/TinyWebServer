@@ -207,7 +207,7 @@ void Utils::show_error(int connfd, const char *info)
     close(connfd);
 }
 
-int Utils::u_pipefd[2] = {0};
+int *Utils::u_pipefd = nullptr;
 int Utils::u_epollfd = 0;
 
 void cb_func(client_data *user_data)
@@ -215,6 +215,5 @@ void cb_func(client_data *user_data)
     epoll_ctl(Utils::u_epollfd, EPOLL_CTL_DEL, user_data->sockfd, 0);
     assert(user_data);
     close(user_data->sockfd);
-    // todo lst_timer.cpp http_conn
-    /*http_conn::m_user_count--;*/
+    --http_conn::m_user_count;
 }

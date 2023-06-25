@@ -120,7 +120,7 @@ void http_conn::close_conn(bool real_close)
 非阻塞ET工作模式下，需要一次性将数据读完*/
 bool http_conn::read_once()
 {
-    /*循环读，知道连接关闭或无数据可读*/
+    /*循环读，直到连接关闭或无数据可读*/
     if (m_read_last_next_idx >= READ_BUFFER_SIZE) {
         return false;
     }

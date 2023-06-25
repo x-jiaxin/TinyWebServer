@@ -118,7 +118,7 @@ void *threadpool<T>::worker(void *arg)
 
 /*从工作队列中取任务。进行处理*/
 template<typename T>
-[[noreturn]] void threadpool<T>::run()
+void threadpool<T>::run()
 {
     while (true) {
         m_queue_stat.wait();
@@ -134,9 +134,32 @@ template<typename T>
             continue;
         }
         if (m_actor_model == 1) {
-            //todo 线程池run()
+            /*reactor*/
+            if (request->m_state == 0) {
+                //读
+                if (request->read_once()) {
+                    request->improv = 1;
+                    connectionRAII conn(&request->m_mysql, m_conn_pool);
+                    request->process();
+                }
+                else {
+                    request->improv = 1;
+                    request->timer_flag = 1;
+                }
+            }
+            else {
+                //写
+                if (request->write()) {
+                    request->improv = 1;
+                }
+                else {
+                    request->improv = 1;
+                    request->timer_flag = 1;
+                }
+            }
         }
         else {
+            /*proactor*/
             connectionRAII conn(&request->m_mysql, m_conn_pool);
             request->process();
         }

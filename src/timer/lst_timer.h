@@ -11,6 +11,7 @@
 #include <sys/epoll.h>
 #include <csignal>
 #include <cassert>
+#include <http_conn.h>
 using std::cin;
 using std::cout;
 using std::endl;
@@ -73,7 +74,7 @@ class Utils
 {
 public:
     int TIMESLOT{};
-    static int u_pipefd[2];
+    static int *u_pipefd;
     static int u_epollfd;
     sort_timer_lst m_time_list;
 
@@ -95,5 +96,5 @@ public:
 
     void show_error(int connfd, const char *info);
 };
-
+void cb_func(client_data *user_data);
 #endif//TINYWEBSERVER_LST_TIMER_H
