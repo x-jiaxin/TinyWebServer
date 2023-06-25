@@ -7,11 +7,12 @@ set(MYSQL_LIBS
         )
 
 
-include_directories(threadpool mysql Log Lock)
+include_directories(threadpool mysql Log Lock timer)
 
 #add_executable(test_connpool test_connpool.cpp)
 #add_executable(test_threadpool test_threadpool.cpp)
-add_executable(test_log test_log.cpp)
+#add_executable(test_log test_log.cpp)
+add_executable(test_log test/test_log.cpp)
 
 #add_library(MyLib "")
 #target_sources(MyLib
@@ -22,12 +23,15 @@ add_executable(test_log test_log.cpp)
 #        ./http/http_conn.cpp)
 
 
-#aux_source_directory(./threadpool SOURCE)
+aux_source_directory(./threadpool SOURCE)
 aux_source_directory(./Log SOURCE)
 aux_source_directory(./mysql SOURCE)
 aux_source_directory(./http SOURCE)
+aux_source_directory(./timer SOURCE)
 add_library(MyLib ${SOURCE})
 
 #target_link_libraries(test_connpool MyLib ${MYSQL_LIBS})
 target_link_libraries(test_log MyLib)
+#target_link_libraries(test_timer MyLib)
 
+add_subdirectory(timer)
