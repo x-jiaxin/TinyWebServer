@@ -7,12 +7,8 @@ set(MYSQL_LIBS
         )
 
 
-include_directories(threadpool mysql Log Lock timer)
+include_directories(threadpool mysql Log Lock timer http)
 
-#add_executable(test_connpool test_connpool.cpp)
-#add_executable(test_threadpool test_threadpool.cpp)
-#add_executable(test_log test_log.cpp)
-add_executable(test_log test/test_log.cpp)
 
 #add_library(MyLib "")
 #target_sources(MyLib
@@ -30,8 +26,7 @@ aux_source_directory(./http SOURCE)
 aux_source_directory(./timer SOURCE)
 add_library(MyLib ${SOURCE})
 
-#target_link_libraries(test_connpool MyLib ${MYSQL_LIBS})
-target_link_libraries(test_log MyLib)
-#target_link_libraries(test_timer MyLib)
+add_executable(${PROJECT_NAME} TinyWebServer.cpp)
 
-add_subdirectory(timer)
+target_link_libraries(${PROJECT_NAME} MyLib ${MYSQL_LIBS})
+

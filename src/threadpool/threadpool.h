@@ -137,7 +137,7 @@ template<typename T>
             //todo 线程池run()
         }
         else {
-            connectionRAII conn(&request->mysql, m_conn_pool);
+            connectionRAII conn(&request->m_mysql, m_conn_pool);
             request->process();
         }
     }
