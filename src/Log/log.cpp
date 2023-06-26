@@ -31,7 +31,7 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size,
     }
     m_close_log = close_log;
     m_log_buf_size = log_buf_size;
-    m_buf = new char[m_log_buf_size]{0};
+    m_buf = new char[m_log_buf_size];
     m_max_lines = split_lines;
 
     auto t = time(nullptr);

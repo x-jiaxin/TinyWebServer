@@ -32,4 +32,7 @@ add_executable(${PROJECT_NAME} TinyWebServer.cpp)
 
 target_link_libraries(${PROJECT_NAME} MyLib ${MYSQL_LIBS})
 
+add_executable(test_log test/test_log.cpp)
+target_link_libraries(test_log MyLib)
+
 

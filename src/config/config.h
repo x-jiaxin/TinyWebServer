@@ -19,7 +19,7 @@ public:
 
     int PORT;
 
-    int LOGWrite;
+    int ASYN_LOGWrite;
 
     int TRIGMode;
 

@@ -19,8 +19,9 @@ public:
     ~server();
 
     void init(int port, const string &user, const string &passwd,
-              const string &dbname, int log_write, int linger, int trigmode,
-              int sqlnum, int threadnum, int closelog, int actormodel);
+              const string &dbname, int asyn_log_write, int linger,
+              int trigmode, int sqlnum, int threadnum, int closelog,
+              int actormodel);
 
     void thread_pool();
     void sql_pool();
@@ -39,7 +40,7 @@ public:
 public:
     int m_port;
     char *m_root;
-    int m_log_write;
+    int m_asyn_log_write;
     int m_close_log;
     int m_actmodel;
 
@@ -56,7 +57,7 @@ public:
     threadpool<http_conn> *m_thread_pool;
     int m_thread_num;
 
-    epoll_event events[MAX_EVENT_NUMBER];
+    epoll_event m_events[MAX_EVENT_NUMBER];
 
     int m_listen_fd;
     int m_linger;

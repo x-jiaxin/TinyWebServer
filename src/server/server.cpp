@@ -9,8 +9,10 @@ server::server()
     m_user_data = new client_data[MAX_FD];
 
     char path[200];
-    strcpy(m_root, getcwd(path, 200));
     char root[6] = "/root";
+    m_root = (char *)malloc(strlen(path) + strlen(root) + 1);
+    //    m_root = new char[strlen(path) + strlen(root) + 1];
+    strcpy(m_root, getcwd(path, 200));
     strcat(m_root, root);
 }
 
@@ -19,6 +21,8 @@ server::~server()
     delete[] m_user_data;
     delete[] users;
     delete m_thread_pool;
+    delete m_root;
+    //    free(m_root);
     close(m_listen_fd);
     close(m_epollfd);
     close(m_pipefd[0]);
@@ -26,14 +30,15 @@ server::~server()
 }
 
 void server::init(int port, const string &user, const string &passwd,
-                  const string &dbname, int log_write, int linger, int trigmode,
-                  int sqlnum, int threadnum, int closelog, int actormodel)
+                  const string &dbname, int asyn_log_write, int linger,
+                  int trigmode, int sqlnum, int threadnum, int closelog,
+                  int actormodel)
 {
     m_port = port;
     m_sql_username = user;
     m_sql_passwd = passwd;
     m_sql_dbname = dbname;
-    m_log_write = log_write;
+    m_asyn_log_write = asyn_log_write;
     m_linger = linger;
     m_trigmode = trigmode;
     m_sql_num = sqlnum;
@@ -61,14 +66,14 @@ void server::log_write()
 {
     if (m_close_log == 0)
     {
-        if (m_log_write)
+        if (m_asyn_log_write)
         {
             /*异步日志*/
-            Log::getInstance()->init("./log", m_close_log, 2000, 800000, 800);
+            Log::getInstance()->init("log", m_close_log, 2000, 800000, 800);
         }
         else
         {
-            Log::getInstance()->init("./log", m_close_log, 2000, 800000, 0);
+            Log::getInstance()->init("log", m_close_log, 2000, 800000, 0);
         }
     }
 }
@@ -197,6 +202,7 @@ void server::deal_timer(util_timer *timer, int sockfd)
     }
 }
 
+/*新连接*/
 bool server::deal_clientdata()
 {
     sockaddr_in client_address{};
@@ -322,6 +328,109 @@ void server::deal_read(int sockfd)
     }
 }
 
-void server::deal_write(int sockfd) {}
+void server::deal_write(int sockfd)
+{
+    auto timer = m_user_data[sockfd].timer;
+    /*reactor，主线程不处理读*/
+    if (m_actmodel)
+    {
+        if (timer)
+        {
+            adjust_timer(timer);
+        }
+        /*读0，写1*/
+        m_thread_pool->append(users + sockfd, 1);
 
-void server::eventLoop() {}
+        while (true)
+        {
+            if (1 == users[sockfd].improv)
+            {
+                if (1 == users[sockfd].timer_flag)
+                {
+                    deal_timer(timer, sockfd);
+                    users[sockfd].timer_flag = 0;
+                }
+                users[sockfd].improv = 0;
+                break;
+            }
+        }
+    }
+    /*proactor，主线程处理读*/
+    else
+    {
+        if (users[sockfd].write())
+        {
+            LOG_INFO("send data to the client(%s)",
+                     inet_ntoa(users[sockfd].getaddress()->sin_addr))
+            m_thread_pool->append(users + sockfd, 1);
+            if (timer)
+            {
+                adjust_timer(timer);
+            }
+        }
+        else
+        {
+            deal_timer(timer, sockfd);
+        }
+    }
+}
+
+void server::eventLoop()
+{
+    bool stop_server = false, time_out = false;
+    while (!stop_server)
+    {
+        int number = epoll_wait(m_epollfd, m_events, MAX_EVENT_NUMBER, -1);
+
+        if (number < 0 && errno != EINTR)
+        {
+            LOG_ERROR("%s", "epoll failure");
+            break;
+        }
+
+        for (int i = 0; i < number; ++i)
+        {
+            int eventfd = m_events[i].data.fd;
+            /*新的连接*/
+            if (eventfd == m_listen_fd)
+            {
+                if (!deal_clientdata())
+                {
+                    continue;
+                }
+            }
+            /*服务器端关闭连接，移除对应的定时器*/
+            else if (m_events[i].events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR))
+            {
+                util_timer *timer = m_user_data[eventfd].timer;
+                deal_timer(timer, eventfd);
+            }
+            /*处理信号*/
+            else if (eventfd == m_pipefd[0] && m_events[i].events & EPOLLIN)
+            {
+                if (!deal_signal(time_out, stop_server))
+                {
+                    LOG_ERROR("deal clientdata(signal) error")
+                }
+            }
+            /*处理读*/
+            else if (m_events[i].events & EPOLLIN)
+            {
+                deal_read(eventfd);
+            }
+            /*处理写*/
+            else if (m_events[i].events & EPOLLOUT)
+            {
+                deal_write(eventfd);
+            }
+        }
+        if (time_out)
+        {
+            utils.timer_handler();
+
+            LOG_INFO("%s", "timer tick");
+
+            time_out = false;
+        }
+    }
+}

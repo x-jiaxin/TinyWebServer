@@ -9,7 +9,7 @@ config::config()
     PORT = 8888;
 
     /*日志写入方式默认同步*/
-    LOGWrite = 0;
+    ASYN_LOGWrite = 0;
 
     /*Listenfd LT + connfd LT*/
     TRIGMode = 0;
@@ -37,42 +37,52 @@ config::config()
 }
 void config::parse_arg(int argc, char **argv)
 {
-    /*"-p  1 -l 2 -m 3 -o 4 -s 5 -t 6 -c 7 -a 8"*/
+    /*"-p  8888 -l 1 -m 1 -o 0 -s 8 -t 8 -c 0 -a 1"*/
     int opt;
     const char *str = "p:l:m:o:s:t:c:a:";
     while ((opt = getopt(argc, argv, str)) != -1)
     {
         switch (opt)
         {
-            case 'p': {
+            case 'p':
+            {
                 PORT = atoi(optarg);
                 break;
             }
-            case 'l': {
-                LOGWrite = atoi(optarg);
+            case 'l':
+            {
+                ASYN_LOGWrite = atoi(optarg);
                 break;
             }
-            case 'm': {
+            case 'm':
+            {
+                /*0 1 2 3*/
                 TRIGMode = atoi(optarg);
                 break;
             }
-            case 'o': {
+            case 'o':
+            {
                 OPT_LINGER = atoi(optarg);
                 break;
             }
-            case 's': {
+            case 's':
+            {
                 sql_num = atoi(optarg);
                 break;
             }
-            case 't': {
+            case 't':
+            {
                 thread_num = atoi(optarg);
                 break;
             }
-            case 'c': {
+            case 'c':
+            {
                 close_log = atoi(optarg);
                 break;
             }
-            case 'a': {
+            case 'a':
+            {
+                /*reactor 1*/
                 actor_model = atoi(optarg);
                 break;
             }
