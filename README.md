@@ -2,7 +2,7 @@
 
 #### 介绍
 
-[TinyWebserver 个人CMake构建版](https://github.com/x-jiaxin/TinyWebServer)
+[TinyWebserver CMake版](https://github.com/x-jiaxin/TinyWebServer)
 
 [原项目地址](https://github.com/qinguoyi/TinyWebServer)
 
