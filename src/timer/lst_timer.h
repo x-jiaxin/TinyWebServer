@@ -38,7 +38,7 @@ public:
     /*超时时间*/
     time_t expire{};
     /*任务回调函数，处理客户数据，由定时器执行者传给回调函数*/
-    void (*cb_func)(client_data *){};
+    void (*cb_func)(client_data *);
     client_data *user_data{};
     util_timer *prev;
     util_timer *next;

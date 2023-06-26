@@ -59,12 +59,15 @@ void server::sql_pool()
 
 void server::log_write()
 {
-    if (m_close_log == 0) {
-        if (m_log_write) {
+    if (m_close_log == 0)
+    {
+        if (m_log_write)
+        {
             /*异步日志*/
             Log::getInstance()->init("./log", m_close_log, 2000, 800000, 800);
         }
-        else {
+        else
+        {
             Log::getInstance()->init("./log", m_close_log, 2000, 800000, 0);
         }
     }
@@ -73,22 +76,26 @@ void server::log_write()
 void server::trig_mode()
 {
     /*LT + LT*/
-    if (m_trigmode == 0) {
+    if (m_trigmode == 0)
+    {
         m_listentrigmode = 0;
         m_conntrigmode = 0;
     }
     /*LT + ET*/
-    else if (m_trigmode == 1) {
+    else if (m_trigmode == 1)
+    {
         m_listentrigmode = 0;
         m_conntrigmode = 1;
     }
     /*ET + LT*/
-    else if (m_trigmode == 2) {
+    else if (m_trigmode == 2)
+    {
         m_listentrigmode = 1;
         m_conntrigmode = 0;
     }
     /*ET + ET*/
-    else if (m_trigmode == 3) {
+    else if (m_trigmode == 3)
+    {
         m_listentrigmode = 1;
         m_conntrigmode = 1;
     }
@@ -100,12 +107,14 @@ void server::eventListen()
     assert(m_listen_fd >= 0);
 
     /*关闭连接*/
-    if (0 == m_linger) {
+    if (0 == m_linger)
+    {
         //        close()立刻返回，底层会将未发送完的数据发送完成后再释放资源，即优雅退出。
         linger tmp = {0, 1};
         setsockopt(m_listen_fd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
     }
-    else {
+    else
+    {
         linger tmp = {1, 1};
         setsockopt(m_listen_fd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
     }
@@ -145,7 +154,8 @@ void server::eventListen()
     alarm(TIMESLOT);
 }
 
-void server::timer(int connfd, sockaddr_in client_address)
+/*创建定时器*/
+void server::timer(int connfd, const sockaddr_in &client_address)
 {
     users[connfd].init(connfd, client_address, m_root, m_conntrigmode,
                        m_close_log, m_sql_username, m_sql_passwd, m_sql_dbname);
@@ -172,25 +182,69 @@ void server::adjust_timer(util_timer *timer)
     LOG_INFO("%s", "adjust timer once")
 }
 
+/*时间到，处理定时任务*/
 void server::deal_timer(util_timer *timer, int sockfd)
 {
-    timer->cb_func(&user_timer[sockfd]);
-    if (timer) {
+    if (timer)
+    {
+        timer->cb_func(&user_timer[sockfd]);
         utils.m_time_list.delete_timer(timer);
+        LOG_INFO("close fd %d", user_timer[sockfd].sockfd)
     }
-    LOG_INFO("close fd %d", user_timer[sockfd].sockfd)
+    else
+    {
+        LOG_ERROR("timer is nullptr!")
+    }
 }
 
-bool server::dealclientdata()
+bool server::deal_clientdata()
 {
-    return false;
+    sockaddr_in client_address{};
+    socklen_t sz = sizeof(client_address);
+    if (0 == m_listentrigmode)
+    {
+        //LT监听
+        int connfd = accept(m_listen_fd, (sockaddr *)&client_address, &sz);
+        if (connfd < 0)
+        {
+            LOG_ERROR("accept error! errno is %d", errno)
+            return false;
+        }
+        if (http_conn::m_user_count >= MAX_FD)
+        {
+            utils.show_error(connfd, "Busy! Too many request");
+            LOG_ERROR("Server Busy")
+            return false;
+        }
+        timer(connfd, client_address);
+    }
+    else
+    {
+        //ET
+        while (true)
+        {
+            int connfd = accept(m_listen_fd, (sockaddr *)&client_address, &sz);
+            if (connfd < 0)
+            {
+                LOG_ERROR("accept error! errno is %d", errno)
+                break;
+            }
+            if (http_conn::m_user_count >= MAX_FD)
+            {
+                utils.show_error(connfd, "Busy! Too many request");
+                LOG_ERROR("Server Busy")
+                break;
+            }
+            timer(connfd, client_address);
+        }
+        return false;
+    }
+    return true;
 }
-bool server::dealwithsignal(bool &timeout, bool &stop_server)
-{
-    return false;
-}
-void server::dealwithread(int sockfd) {}
 
-void server::dealwithwrite(int sockfd) {}
+bool server::deal_signal(bool &timeout, bool &stop_server) {}
+void server::deal_read(int sockfd) {}
+
+void server::deal_write(int sockfd) {}
 
 void server::eventLoop() {}

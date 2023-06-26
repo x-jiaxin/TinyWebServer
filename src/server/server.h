@@ -28,13 +28,13 @@ public:
     void trig_mode();
     void eventListen();
     void eventLoop();
-    void timer(int connfd, sockaddr_in client_address);
+    void timer(int connfd, const sockaddr_in &client_address);
     void adjust_timer(util_timer *timer);
     void deal_timer(util_timer *timer, int sockfd);
-    bool dealclientdata();
-    bool dealwithsignal(bool &timeout, bool &stop_server);
-    void dealwithread(int sockfd);
-    void dealwithwrite(int sockfd);
+    bool deal_clientdata();
+    bool deal_signal(bool &timeout, bool &stop_server);
+    void deal_read(int sockfd);
+    void deal_write(int sockfd);
 
 public:
     int m_port;
