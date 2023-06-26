@@ -15,13 +15,15 @@ class sem
 public:
     sem()
     {
-        if (sem_init(&m_sem, 0, 0) != 0) {
+        if (sem_init(&m_sem, 0, 0) != 0)
+        {
             throw std::exception();
         }
     }
     explicit sem(int num)
     {
-        if (sem_init(&m_sem, 0, num) != 0) {
+        if (sem_init(&m_sem, 0, num) != 0)
+        {
             throw std::exception();
         }
     }
@@ -47,7 +49,8 @@ class locker
 public:
     locker()
     {
-        if (pthread_mutex_init(&m_mutex, nullptr) != 0) {
+        if (pthread_mutex_init(&m_mutex, nullptr) != 0)
+        {
             throw std::exception();
         }
     }
@@ -81,7 +84,8 @@ public:
         /*        if (pthread_mutex_init(&m_mutex, nullptr) != 0) {
             throw std::exception();
         }*/
-        if (pthread_cond_init(&m_cond, nullptr) != 0) {
+        if (pthread_cond_init(&m_cond, nullptr) != 0)
+        {
             //            pthread_mutex_destroy(&m_mutex);
             throw std::exception();
         }

@@ -21,7 +21,8 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size,
                int split_lines, int max_queue_size)
 {
     //异步
-    if (max_queue_size >= 1) {
+    if (max_queue_size >= 1)
+    {
         m_is_async = true;
         m_block_queue = new block_queue<string>(max_queue_size);
         pthread_t tid;
@@ -41,13 +42,15 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size,
     auto p = strrchr(file_name, '/');
     char log_full_name[256]{0};
 
-    if (!p) {
+    if (!p)
+    {
         //snprintf() 是一个 C 语言标准库函数，用于格式化输出字符串，并将结果写入到指定的缓冲区，
         // 与 sprintf() 不同的是，snprintf() 会限制输出的字符数，避免缓冲区溢出。
         snprintf(log_full_name, 255, "%d_%02d_%02d_%s", my_tm.tm_year + 1900,
                  my_tm.tm_mon + 1, my_tm.tm_mday, file_name);
     }
-    else {
+    else
+    {
         strcpy(log_name, p + 1);
         strncpy(dir_path, file_name, p - file_name + 1);
         snprintf(log_full_name, 255, "%s%d_%02d_%02d_%s", dir_path,
@@ -58,7 +61,8 @@ bool Log::init(const char *file_name, int close_log, int log_buf_size,
     m_day = my_tm.tm_mday;
     //追加到一个文件。写操作向文件末尾追加数据。如果文件不存在，则创建文件。
     m_file_ptr = fopen(log_full_name, "a");
-    if (!m_file_ptr) {
+    if (!m_file_ptr)
+    {
         return false;
     }
     return true;
@@ -72,7 +76,8 @@ bool Log::write_log(int level, const char *format, ...)
     tm *sys_tm = localtime(&t);
     tm my_tm = *sys_tm;
     char s[16]{0};
-    switch (level) {
+    switch (level)
+    {
         case 0:
             strcpy(s, "[debug]:");
             break;
@@ -92,7 +97,8 @@ bool Log::write_log(int level, const char *format, ...)
     //写入一个log，对m_count++, m_split_lines最大行数
     m_mutex.lock();
     ++m_lines;
-    if (m_day != my_tm.tm_mday || m_lines % m_max_lines == 0) {
+    if (m_day != my_tm.tm_mday || m_lines % m_max_lines == 0)
+    {
         char new_log[256]{0};
         fflush(m_file_ptr);
         fclose(m_file_ptr);
@@ -101,12 +107,14 @@ bool Log::write_log(int level, const char *format, ...)
         snprintf(tail, 16, "%d_%02d_%02d_", my_tm.tm_year + 1900,
                  my_tm.tm_mon + 1, my_tm.tm_mday);
 
-        if (m_day != my_tm.tm_mday) {
+        if (m_day != my_tm.tm_mday)
+        {
             snprintf(new_log, 255, "%s%s%s", dir_path, tail, log_name);
             m_day = my_tm.tm_mday;
             m_lines = 0;
         }
-        else {
+        else
+        {
             snprintf(new_log, 255, "%s%s%s.%lld", dir_path, tail, log_name,
                      m_lines / m_max_lines);
         }
@@ -131,12 +139,14 @@ bool Log::write_log(int level, const char *format, ...)
     log_str = m_buf;
     m_mutex.unlock();
 
-    if (m_is_async && !m_block_queue->full()) {
+    if (m_is_async && !m_block_queue->full())
+    {
         printf("async\n");
         m_block_queue->push(log_str);
         printf("log_str: %s\n", log_str.c_str());
     }
-    else {
+    else
+    {
         m_mutex.lock();
         fputs(log_str.c_str(), m_file_ptr);
         m_mutex.unlock();
@@ -161,7 +171,8 @@ Log::Log()
 Log::~Log()
 {
     printf("~log\n");
-    if (m_file_ptr) {
+    if (m_file_ptr)
+    {
         fclose(m_file_ptr);
     }
     if (m_block_queue)
@@ -171,7 +182,8 @@ Log::~Log()
 void *Log::async_write_log()
 {
     string log_str;
-    while (m_block_queue->pop(log_str)) {
+    while (m_block_queue->pop(log_str))
+    {
         m_mutex.lock();
         fputs(log_str.c_str(), m_file_ptr);
         m_mutex.unlock();

@@ -67,23 +67,27 @@ private:
     int m_close_log;
 };
 #define LOG_DEBUG(format, ...)                                                 \
-    if (0 == Log::getInstance()->get_close()) {                                \
+    if (0 == Log::getInstance()->get_close())                                  \
+    {                                                                          \
         Log::getInstance()->write_log(0, format, ##__VA_ARGS__);               \
         Log::getInstance()->flush();                                           \
     }
 
 #define LOG_INFO(format, ...)                                                  \
-    if (0 == Log::getInstance()->get_close()) {                                \
+    if (0 == Log::getInstance()->get_close())                                  \
+    {                                                                          \
         Log::getInstance()->write_log(1, format, ##__VA_ARGS__);               \
         Log::getInstance()->flush();                                           \
     }
 #define LOG_WARN(format, ...)                                                  \
-    if (0 == Log::getInstance()->get_close()) {                                \
+    if (0 == Log::getInstance()->get_close())                                  \
+    {                                                                          \
         Log::getInstance()->write_log(2, format, ##__VA_ARGS__);               \
         Log::getInstance()->flush();                                           \
     }
 #define LOG_ERROR(format, ...)                                                 \
-    if (0 == Log::getInstance()->get_close()) {                                \
+    if (0 == Log::getInstance()->get_close())                                  \
+    {                                                                          \
         Log::getInstance()->write_log(3, format, ##__VA_ARGS__);               \
         Log::getInstance()->flush();                                           \
     }

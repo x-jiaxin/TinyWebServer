@@ -57,19 +57,24 @@ threadpool<T>::threadpool(int actor_model, connectpool *conn_pool,
     : m_thread_number(thread_number), m_max_requests(max_request),
       m_threads(nullptr), m_conn_pool(conn_pool), m_actor_model(actor_model)
 {
-    if (thread_number <= 0 || max_request <= 0) {
+    if (thread_number <= 0 || max_request <= 0)
+    {
         throw std::runtime_error("thread_number max_request <= 0!");
     }
     m_threads = new pthread_t[thread_number];
-    if (!m_threads) {
+    if (!m_threads)
+    {
         throw std::runtime_error("m_threads fail!");
     }
-    for (int i = 0; i < m_thread_number; ++i) {
-        if (pthread_create(m_threads + i, nullptr, worker, this) != 0) {
+    for (int i = 0; i < m_thread_number; ++i)
+    {
+        if (pthread_create(m_threads + i, nullptr, worker, this) != 0)
+        {
             delete[] m_threads;
             throw std::runtime_error("pthread_create fail!");
         }
-        if (pthread_detach(m_threads[i]) != 0) {
+        if (pthread_detach(m_threads[i]) != 0)
+        {
             delete[] m_threads;
             throw std::runtime_error("pthread_detach fail!");
         }
@@ -80,7 +85,8 @@ template<typename T>
 bool threadpool<T>::append(T *request, int state)
 {
     m_queue_lock.lock();
-    if (m_work_queue.size() > m_max_requests) {
+    if (m_work_queue.size() > m_max_requests)
+    {
         m_queue_lock.unlock();
         return false;
     }
@@ -96,7 +102,8 @@ template<typename T>
 bool threadpool<T>::append_p(T *request)
 {
     m_queue_lock.lock();
-    if (m_work_queue.size() > m_max_requests) {
+    if (m_work_queue.size() > m_max_requests)
+    {
         m_queue_lock.unlock();
         return false;
     }
@@ -120,45 +127,56 @@ void *threadpool<T>::worker(void *arg)
 template<typename T>
 void threadpool<T>::run()
 {
-    while (true) {
+    while (true)
+    {
         m_queue_stat.wait();
         m_queue_lock.lock();
-        if (m_work_queue.empty()) {
+        if (m_work_queue.empty())
+        {
             m_queue_lock.unlock();
             continue;
         }
         T *request = m_work_queue.front();
         m_work_queue.pop_front();
         m_queue_lock.unlock();
-        if (!request) {
+        if (!request)
+        {
             continue;
         }
-        if (m_actor_model == 1) {
+        if (m_actor_model == 1)
+        {
             /*reactor*/
-            if (request->m_state == 0) {
+            if (request->m_state == 0)
+            {
                 //读
-                if (request->read_once()) {
+                if (request->read_once())
+                {
                     request->improv = 1;
                     connectionRAII conn(&request->m_mysql, m_conn_pool);
                     request->process();
                 }
-                else {
+                else
+                {
                     request->improv = 1;
                     request->timer_flag = 1;
                 }
             }
-            else {
+            else
+            {
                 //写
-                if (request->write()) {
+                if (request->write())
+                {
                     request->improv = 1;
                 }
-                else {
+                else
+                {
                     request->improv = 1;
                     request->timer_flag = 1;
                 }
             }
         }
-        else {
+        else
+        {
             /*proactor*/
             connectionRAII conn(&request->m_mysql, m_conn_pool);
             request->process();

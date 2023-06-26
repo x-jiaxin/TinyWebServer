@@ -40,8 +40,10 @@ void config::parse_arg(int argc, char **argv)
     /*"-p  1 -l 2 -m 3 -o 4 -s 5 -t 6 -c 7 -a 8"*/
     int opt;
     const char *str = "p:l:m:o:s:t:c:a:";
-    while ((opt = getopt(argc, argv, str)) != -1) {
-        switch (opt) {
+    while ((opt = getopt(argc, argv, str)) != -1)
+    {
+        switch (opt)
+        {
             case 'p': {
                 PORT = atoi(optarg);
                 break;

@@ -13,7 +13,8 @@ int main()
     int port = 3306;
     const char *DBname = "DB1";
     auto sql_pool = connectpool::GetInstance();
-    if (!sql_pool) {
+    if (!sql_pool)
+    {
         exit(1);
     }
     sql_pool->init(url, username, passwd, DBname, port, 10, false);

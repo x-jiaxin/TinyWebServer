@@ -16,7 +16,8 @@ connectpool::FreeInstance connectpool::freeInstance;
 //从连接池中获取一个空闲连接
 MYSQL *connectpool::GetConnection()
 {
-    if (m_connList.empty()) {
+    if (m_connList.empty())
+    {
         return nullptr;
     }
 
@@ -36,7 +37,8 @@ MYSQL *connectpool::GetConnection()
 //归还一个连接到连接池中
 bool connectpool::ReleaseConnection(MYSQL *conn)
 {
-    if (!conn) {
+    if (!conn)
+    {
         return false;
     }
 
@@ -59,8 +61,10 @@ void connectpool::FreePool()
 {
     m_lock.lock();
 
-    if (!m_connList.empty()) {
-        for (auto &iterator: m_connList) {
+    if (!m_connList.empty())
+    {
+        for (auto &iterator: m_connList)
+        {
             mysql_close(iterator);
             //解决mysql_init()报内存泄露的问题
             //如果是在类中使用MySQL，一般是把mysql_close和mysql_library_end()放在析构函数里
@@ -76,7 +80,8 @@ void connectpool::FreePool()
 }
 connectpool *connectpool::GetInstance()
 {
-    if (!sqlpool) {
+    if (!sqlpool)
+    {
         sqlpool = new connectpool;
     }
     return sqlpool;
@@ -91,10 +96,12 @@ void connectpool::init(const string &url, const string &username,
     m_DBName = dbname;
     m_port = port;
     m_close_log = closelog;
-    for (int i = 0; i < MaxConn; ++i) {
+    for (int i = 0; i < MaxConn; ++i)
+    {
         MYSQL *con = nullptr;
         con = mysql_init(con);
-        if (!con) {
+        if (!con)
+        {
             //            LOG_ERROR("MySQL Error");
             cout << "Mysql error!\n";
             exit(1);
@@ -102,7 +109,8 @@ void connectpool::init(const string &url, const string &username,
         con = mysql_real_connect(con, url.c_str(), username.c_str(),
                                  password.c_str(), dbname.c_str(), port,
                                  nullptr, 0);
-        if (!con) {
+        if (!con)
+        {
             // log
             cout << "MySQL error!\n";
             exit(1);

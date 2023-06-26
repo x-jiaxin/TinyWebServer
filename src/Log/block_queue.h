@@ -31,7 +31,8 @@ public:
     {
         m_mutex.lock();
 
-        if (!m_arr) {
+        if (!m_arr)
+        {
             delete[] m_arr;
         }
         m_mutex.unlock();
@@ -49,7 +50,8 @@ public:
     bool full()
     {
         m_mutex.lock();
-        if (m_cur_size >= m_max_size) {
+        if (m_cur_size >= m_max_size)
+        {
             m_mutex.unlock();
             return true;
         }
@@ -60,7 +62,8 @@ public:
     bool empty()
     {
         m_mutex.lock();
-        if (m_cur_size == 0) {
+        if (m_cur_size == 0)
+        {
             m_mutex.unlock();
             return true;
         }
@@ -71,7 +74,8 @@ public:
     void front(T &elem)
     {
         m_mutex.lock();
-        if (m_cur_size == 0) {
+        if (m_cur_size == 0)
+        {
             m_mutex.unlock();
             return;
         }
@@ -82,7 +86,8 @@ public:
     void back(T &elem)
     {
         m_mutex.lock();
-        if (m_cur_size == 0) {
+        if (m_cur_size == 0)
+        {
             m_mutex.unlock();
             return;
         }
@@ -110,7 +115,8 @@ public:
     bool push(const T &item)
     {
         m_mutex.lock();
-        if (m_cur_size >= m_max_size) {
+        if (m_cur_size >= m_max_size)
+        {
             m_condation.broadcast();
             m_mutex.unlock();
             return false;
@@ -129,14 +135,16 @@ public:
     bool pop(T &elem)
     {
         m_mutex.lock();
-        while (m_cur_size <= 0) {
+        while (m_cur_size <= 0)
+        {
             /* timeval now{};
             gettimeofday(&now, nullptr);
             timespec s{now.tv_sec + 5, now.tv_usec * 1000};
             if (!m_condation.timewait(m_mutex.get(), s)) {*/
 
             // m_condation.wait()前，互斥锁必须已上锁
-            if (!m_condation.wait(m_mutex.get())) {
+            if (!m_condation.wait(m_mutex.get()))
+            {
                 m_mutex.unlock();
                 return false;
             }

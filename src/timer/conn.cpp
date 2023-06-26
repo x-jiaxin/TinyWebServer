@@ -27,12 +27,15 @@ int timeout_connect(const char *ip, int port, int time)
     ret = setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, &timeout, len);
     assert(ret != -1);
     ret = connect(sockfd, (sockaddr *)&address, sizeof(address));
-    if (ret == -1) {
-        if (errno == EINPROGRESS) {
+    if (ret == -1)
+    {
+        if (errno == EINPROGRESS)
+        {
             printf("connecting timeout!\n");
             return -1;
         }
-        else {
+        else
+        {
             printf("error occur!\n");
             return -1;
         }
