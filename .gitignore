@@ -19,4 +19,8 @@ bin-release/
 
 /build
 /.idea
-/log
+log/
+
+!/root
+/root/*
+!/root/*.html

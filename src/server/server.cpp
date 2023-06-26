@@ -8,12 +8,15 @@ server::server()
     users = new http_conn[MAX_FD];
     m_user_data = new client_data[MAX_FD];
 
+    chdir("/home/jiaxin/Code/TinyWebServer");
     char path[200];
+    getcwd(path, 200);
     char root[6] = "/root";
     m_root = (char *)malloc(strlen(path) + strlen(root) + 1);
     //    m_root = new char[strlen(path) + strlen(root) + 1];
-    strcpy(m_root, getcwd(path, 200));
+    strcpy(m_root, path);
     strcat(m_root, root);
+    //    printf("%s\n", m_root);
 }
 
 server::~server()
@@ -66,14 +69,15 @@ void server::log_write()
 {
     if (m_close_log == 0)
     {
+        auto log_path = "/home/jiaxin/Code/TinyWebServer/log/log";
         if (m_asyn_log_write)
         {
             /*异步日志*/
-            Log::getInstance()->init("log", m_close_log, 2000, 800000, 800);
+            Log::getInstance()->init(log_path, m_close_log, 2000, 800000, 800);
         }
         else
         {
-            Log::getInstance()->init("log", m_close_log, 2000, 800000, 0);
+            Log::getInstance()->init(log_path, m_close_log, 2000, 800000, 0);
         }
     }
 }

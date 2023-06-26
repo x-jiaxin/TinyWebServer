@@ -141,9 +141,9 @@ bool Log::write_log(int level, const char *format, ...)
 
     if (m_is_async && !m_block_queue->full())
     {
-        printf("async\n");
+        //        printf("async\n");
         m_block_queue->push(log_str);
-        printf("log_str: %s\n", log_str.c_str());
+        //        printf("log_str: %s\n", log_str.c_str());
     }
     else
     {

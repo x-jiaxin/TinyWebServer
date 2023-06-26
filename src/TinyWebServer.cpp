@@ -21,8 +21,6 @@ int main(int argc, char *argv[])
     config.parse_arg(argc, argv);
 
     server my_webserver;
-    int *p = new int(100);
-    delete p;
 
     //初始化
     my_webserver.init(config.PORT, user, passwd, databasename,
