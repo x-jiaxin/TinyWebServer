@@ -75,11 +75,13 @@ void modfd(int epollfd, int fd, int ev, int TRIGMode)
     event.data.fd = fd;
     if (TRIGMode)
     {
-        event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+        /*错出在这，导致写事件无效*/
+        //        event.events = EPOLLIN | EPOLLET | EPOLLRDHUP;
+        event.events = ev | EPOLLET | EPOLLRDHUP;
     }
     else
     {
-        event.events = EPOLLIN | EPOLLRDHUP;
+        event.events = ev | EPOLLRDHUP;
     }
     epoll_ctl(epollfd, EPOLL_CTL_MOD, fd, &event);
 }
@@ -206,7 +208,7 @@ bool http_conn::write()
         {
             m_iv[0].iov_len = 0;
             m_iv[1].iov_base =
-                    m_file_maddress + (bytes_have_send - m_write_to_send);
+                    m_file_maddress + (bytes_have_send - m_write_needto_send);
             m_iv[1].iov_len = bytes_to_send;
         }
         else
@@ -218,7 +220,7 @@ bool http_conn::write()
         {
             /*发送HTTP响应成功，根据HTTP请求中的Connection字段决定是否立即关闭连接*/
             unmap();
-            modfd(m_epollfd, m_sock_fd, EPOLLIN, 0);
+            modfd(m_epollfd, m_sock_fd, EPOLLIN, m_TRIGMode);
 
             if (m_linger)
             {
@@ -246,7 +248,7 @@ void http_conn::init()
     m_start_line_idx = 0;
     m_checking_idx = 0;
     m_read_last_next_idx = 0;
-    m_write_to_send = 0;
+    m_write_needto_send = 0;
 
     m_mysql = nullptr;
     bytes_to_send = 0;
@@ -269,6 +271,8 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
         printf("%s\n", p);// "\t\ndef"
      */
     //截取method
+    //    char *temp = new char[100];
+    //    strcpy(temp, text);
     m_url = strpbrk(text, " \t");
     /*如果请求行中没有空白字符或"\t",则HTTP请求有问题*/
     if (!m_url)
@@ -328,7 +332,7 @@ http_conn::HTTP_CODE http_conn::parse_request_line(char *text)
     {
         return BAD_REQUEST;
     }
-    //当url为'/'，显示判断界面
+    //当url为'/'，显示判断界面，进入显示界面
     if (strlen(m_url) == 1)
     {
         strcat(m_url, "judge.html");
@@ -401,7 +405,8 @@ bool http_conn::process_write(http_conn::HTTP_CODE ret)
 {
     switch (ret)
     {
-        case INTERNAL_ERROR: {
+        case INTERNAL_ERROR:
+        {
             add_status_line(500, error_500_title);
             add_headers(strlen(error_500_form));
             if (!add_content(error_500_form))
@@ -410,7 +415,8 @@ bool http_conn::process_write(http_conn::HTTP_CODE ret)
             }
             break;
         }
-        case BAD_REQUEST: {
+        case BAD_REQUEST:
+        {
             add_status_line(400, error_400_title);
             add_headers(strlen(error_400_form));
             if (!add_content(error_400_form))
@@ -419,7 +425,8 @@ bool http_conn::process_write(http_conn::HTTP_CODE ret)
             }
             break;
         }
-        case NO_RESOURCE: {
+        case NO_RESOURCE:
+        {
             add_status_line(404, error_404_title);
             add_headers(strlen(error_404_form));
             if (!add_content(error_404_form))
@@ -428,7 +435,8 @@ bool http_conn::process_write(http_conn::HTTP_CODE ret)
             }
             break;
         }
-        case FORBIDDEN_REQUEST: {
+        case FORBIDDEN_REQUEST:
+        {
             add_status_line(403, error_403_title);
             add_headers((int)strlen(error_403_form));
             if (!add_content(error_403_form))
@@ -437,17 +445,18 @@ bool http_conn::process_write(http_conn::HTTP_CODE ret)
             }
             break;
         }
-        case FILE_REQUEST: {
+        case FILE_REQUEST:
+        {
             add_status_line(200, ok_200_title);
             if (m_file_stat.st_size != 0)
             {
                 add_headers((int)m_file_stat.st_size);
                 m_iv[0].iov_base = m_write_buf;
-                m_iv[0].iov_len = m_write_to_send;
+                m_iv[0].iov_len = m_write_needto_send;
                 m_iv[1].iov_base = m_file_maddress;
                 m_iv[1].iov_len = m_file_stat.st_size;
                 m_iv_count = 2;
-                bytes_to_send = m_write_to_send + (int)m_file_stat.st_size;
+                bytes_to_send = m_write_needto_send + (int)m_file_stat.st_size;
                 return true;
             }
             else
@@ -464,9 +473,9 @@ bool http_conn::process_write(http_conn::HTTP_CODE ret)
             return false;
     }
     m_iv[0].iov_base = m_write_buf;
-    m_iv[0].iov_len = m_write_to_send;
+    m_iv[0].iov_len = m_write_needto_send;
     m_iv_count = 1;
-    bytes_to_send = m_write_to_send;
+    bytes_to_send = m_write_needto_send;
     return true;
 }
 
@@ -652,21 +661,21 @@ http_conn::LINE_STATUS http_conn::parse_line()
 /*往写缓冲中写入待发送的数据*/
 bool http_conn::add_response(const char *format, ...)
 {
-    if (m_write_to_send >= WRITE_BUFFER_SIZE)
+    if (m_write_needto_send >= WRITE_BUFFER_SIZE)
     {
         return false;
     }
     va_list arg_list;
     va_start(arg_list, format);
     //函数返回值：若缓冲区足够大，返回存入数组的字符数；若编码出错，返回负值
-    int len = vsnprintf(m_write_buf + m_write_to_send,
-                        WRITE_BUFFER_SIZE - 1 - m_write_to_send, format,
+    int len = vsnprintf(m_write_buf + m_write_needto_send,
+                        WRITE_BUFFER_SIZE - 1 - m_write_needto_send, format,
                         arg_list);
-    if (len >= WRITE_BUFFER_SIZE - 1 - m_write_to_send)
+    if (len >= WRITE_BUFFER_SIZE - 1 - m_write_needto_send)
     {
         return false;
     }
-    m_write_to_send += len;
+    m_write_needto_send += len;
     va_end(arg_list);
     LOG_INFO("request:%s", m_write_buf)
     return true;
@@ -734,7 +743,7 @@ void http_conn::initmysql_result(connectpool *connPool)
 
 bool http_conn::add_content_type()
 {
-    return false;
+    return add_response("Content-Type:%s\r\n", "text/html");
 }
 
 void http_conn::process()
@@ -770,7 +779,8 @@ http_conn::HTTP_CODE http_conn::process_read()
         switch (m_check_state)
         {
                 /*分析请求行*/
-            case CHECK_STATE_REQUESTLINE: {
+            case CHECK_STATE_REQUESTLINE:
+            {
                 if (parse_request_line(text) == BAD_REQUEST)
                 {
                     return BAD_REQUEST;
@@ -778,7 +788,8 @@ http_conn::HTTP_CODE http_conn::process_read()
                 break;
             }
                 /*分析头部字段*/
-            case CHECK_STATE_HEADER: {
+            case CHECK_STATE_HEADER:
+            {
                 ret = parse_headers(text);
                 if (ret == BAD_REQUEST)
                 {
@@ -790,7 +801,8 @@ http_conn::HTTP_CODE http_conn::process_read()
                 }
                 break;
             }
-            case CHECK_STATE_CONTENT: {
+            case CHECK_STATE_CONTENT:
+            {
                 if (parse_content(text) == GET_REQUEST)
                 {
                     return do_request();

@@ -69,7 +69,7 @@ void server::log_write()
 {
     if (m_close_log == 0)
     {
-        auto log_path = "/home/jiaxin/Code/TinyWebServer/log/log";
+        auto log_path = "/home/jiaxin/Code/TinyWebServer/log/.log";
         if (m_asyn_log_write)
         {
             /*异步日志*/
@@ -366,7 +366,6 @@ void server::deal_write(int sockfd)
         {
             LOG_INFO("send data to the client(%s)",
                      inet_ntoa(users[sockfd].getaddress()->sin_addr))
-            m_thread_pool->append(users + sockfd, 1);
             if (timer)
             {
                 adjust_timer(timer);

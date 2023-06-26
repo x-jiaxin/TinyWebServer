@@ -165,7 +165,7 @@ private:
     /*写缓冲区*/
     char m_write_buf[WRITE_BUFFER_SIZE];
     /*写缓冲区待发送的字节数*/
-    int m_write_to_send;
+    int m_write_needto_send;
 
     /*主状态机当前所处的状态*/
     CHECK_STATE m_check_state;

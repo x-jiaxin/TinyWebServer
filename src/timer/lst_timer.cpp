@@ -113,7 +113,7 @@ void sort_timer_lst::tick()
     {
         return;
     }
-    printf("timer tick!\n");
+    //    printf("timer tick!\n");
     auto cur_time = time(nullptr);
     util_timer *tmp = head;
     //从头开始处理每个定时器，直到遇到一个尚未到期的定时器
