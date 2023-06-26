@@ -95,7 +95,7 @@ public:
 
 public:
     /*初始化新接受的连接*/
-    void init(int sockfd, const sockaddr_in &addr, char *root, int TRIGMode,
+    void init(int sockfd, const sockaddr_in &addr, char *root, int ETMode,
               int close_log, const string &user, const string &passwd,
               const string &sqlname);
     /*关闭连接*/
@@ -206,7 +206,7 @@ private:
     char *doc_root;
 
     map<string, string> m_users;
-    int m_TRIGMode;
+    int m_ETMode;
     int m_close_log;
 
     char sql_user[100];

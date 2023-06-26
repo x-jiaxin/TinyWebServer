@@ -13,7 +13,6 @@ class config
 {
 public:
     config();
-    ~config() = default;
 
     void parse_arg(int argc, char *argv[]);
 

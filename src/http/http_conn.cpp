@@ -93,7 +93,7 @@ http_conn::http_conn() = default;
 http_conn::~http_conn() = default;
 
 void http_conn::init(int sockfd, const sockaddr_in &addr, char *root,
-                     int TRIGMode, int close_log, const string &user,
+                     int ETMode, int close_log, const string &user,
                      const string &passwd, const string &sqlname)
 {
     m_sock_fd = sockfd;
@@ -101,9 +101,9 @@ void http_conn::init(int sockfd, const sockaddr_in &addr, char *root,
     /*如下两行是为了避免TIME_WAIT状态，仅用于调试，实际使用时应该去掉*/
     /* int reuse = 1;
     setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));*/
-    m_TRIGMode = TRIGMode;
+    m_ETMode = ETMode;
 
-    addfd(m_epollfd, sockfd, true, m_TRIGMode);
+    addfd(m_epollfd, sockfd, true, m_ETMode);
     ++m_user_count;
 
     //当浏览器出现连接重置时，可能是网站根目录出错或http响应格式出错或者访问的文件中内容完全为空
@@ -135,7 +135,7 @@ bool http_conn::read_once()
     }
     int bytes_read;
     /*LT读取数据*/
-    if (!m_TRIGMode)
+    if (!m_ETMode)
     {
         bytes_read = (int)recv(m_sock_fd, m_read_buf + m_read_last_next_idx,
                                READ_BUFFER_SIZE - m_read_last_next_idx, 0);
@@ -178,7 +178,7 @@ bool http_conn::write()
     if (bytes_to_send == 0)
     {
         /*EPOLLIN: 数据可读*/
-        modfd(m_epollfd, m_sock_fd, EPOLLIN, m_TRIGMode);
+        modfd(m_epollfd, m_sock_fd, EPOLLIN, m_ETMode);
         init();
         return true;
     }
@@ -194,7 +194,7 @@ bool http_conn::write()
             // EAGAIN: 事件未发生
             if (errno == EAGAIN)
             {
-                modfd(m_epollfd, m_sock_fd, EPOLLOUT, m_TRIGMode);
+                modfd(m_epollfd, m_sock_fd, EPOLLOUT, m_ETMode);
                 return true;
             }
             unmap();
@@ -220,7 +220,7 @@ bool http_conn::write()
         {
             /*发送HTTP响应成功，根据HTTP请求中的Connection字段决定是否立即关闭连接*/
             unmap();
-            modfd(m_epollfd, m_sock_fd, EPOLLIN, m_TRIGMode);
+            modfd(m_epollfd, m_sock_fd, EPOLLIN, m_ETMode);
 
             if (m_linger)
             {
@@ -748,19 +748,20 @@ bool http_conn::add_content_type()
 
 void http_conn::process()
 {
+    /*报文解析*/
     HTTP_CODE read_ret = process_read();
     if (read_ret == NO_REQUEST)
     {
-        modfd(m_epollfd, m_sock_fd, EPOLLIN, m_TRIGMode);
+        modfd(m_epollfd, m_sock_fd, EPOLLIN, m_ETMode);
         return;
     }
-
+    /*报文响应*/
     bool write_ret = process_write(read_ret);
     if (!write_ret)
     {
         close_conn();
     }
-    modfd(m_epollfd, m_sock_fd, EPOLLOUT, m_TRIGMode);
+    modfd(m_epollfd, m_sock_fd, EPOLLOUT, m_ETMode);
 }
 
 /*主状态机，分析HTTP请求*/
@@ -769,6 +770,8 @@ http_conn::HTTP_CODE http_conn::process_read()
     LINE_STATUS line_status = LINE_OK;
     HTTP_CODE ret;
     char *text;
+    /*line_status == LINE_OK为了解析完消息体后跳出循环，
+     * 并在完成消息体解析后，将line_status变量更改为LINE_OPEN*/
     while ((m_check_state == CHECK_STATE_CONTENT && line_status == LINE_OK) ||
            ((line_status = parse_line()) == LINE_OK))
     {

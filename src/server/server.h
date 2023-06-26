@@ -42,7 +42,7 @@ public:
     char *m_root;
     int m_asyn_log_write;
     int m_close_log;
-    int m_actmodel;
+    int m_reactor_model;
 
     int m_pipefd[2];
     int m_epollfd;

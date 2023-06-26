@@ -12,7 +12,7 @@ config::config()
     ASYN_LOGWrite = 0;
 
     /*Listenfd LT  connfd LT*/
-    TRIGMode = 0;
+    TRIGMode = 1;
 
     /*保持连接*/
     OPT_LINGER = 0;

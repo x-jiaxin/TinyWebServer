@@ -25,4 +25,4 @@
 
 使用webbench，测试5000并发
 
-![img.png](./img.png)
+![img.png](img.png)

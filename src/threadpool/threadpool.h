@@ -42,7 +42,7 @@ private:
     locker m_queue_lock;
     sem m_queue_stat;
     connectpool *m_conn_pool;
-    int m_actor_model;
+    int m_reactor_model;
 };
 
 template<typename T>
@@ -55,7 +55,7 @@ template<typename T>
 threadpool<T>::threadpool(int actor_model, connectpool *conn_pool,
                           int thread_number, int max_request)
     : m_thread_number(thread_number), m_max_requests(max_request),
-      m_threads(nullptr), m_conn_pool(conn_pool), m_actor_model(actor_model)
+      m_threads(nullptr), m_conn_pool(conn_pool), m_reactor_model(actor_model)
 {
     if (thread_number <= 0 || max_request <= 0)
     {
@@ -143,12 +143,12 @@ void threadpool<T>::run()
         {
             continue;
         }
-        if (m_actor_model == 1)
+        /*reactor*/
+        if (m_reactor_model == 1)
         {
-            /*reactor*/
+            //读
             if (request->m_state == 0)
             {
-                //读
                 if (request->read_once())
                 {
                     request->improv = 1;
@@ -161,9 +161,9 @@ void threadpool<T>::run()
                     request->timer_flag = 1;
                 }
             }
+            //写
             else
             {
-                //写
                 if (request->write())
                 {
                     request->improv = 1;
@@ -175,9 +175,9 @@ void threadpool<T>::run()
                 }
             }
         }
+        /*proactor*/
         else
         {
-            /*proactor*/
             connectionRAII conn(&request->m_mysql, m_conn_pool);
             request->process();
         }

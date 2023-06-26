@@ -47,13 +47,13 @@ void server::init(int port, const string &user, const string &passwd,
     m_sql_num = sqlnum;
     m_thread_num = threadnum;
     m_close_log = closelog;
-    m_actmodel = actormodel;
+    m_reactor_model = actormodel;
 }
 
 void server::thread_pool()
 {
-    m_thread_pool =
-            new threadpool<http_conn>(m_actmodel, m_sql_pool, m_thread_num);
+    m_thread_pool = new threadpool<http_conn>(m_reactor_model, m_sql_pool,
+                                              m_thread_num);
 }
 
 void server::sql_pool()
@@ -118,7 +118,8 @@ void server::eventListen()
     /*关闭连接*/
     if (0 == m_linger)
     {
-        //        close()立刻返回，底层会将未发送完的数据发送完成后再释放资源，即优雅退出。
+        /*❑l_onoff等于0。此时SO_LINGER选项不起作用，close用默认行为
+        来关闭socket。*/
         linger tmp = {0, 1};
         setsockopt(m_listen_fd, SOL_SOCKET, SO_LINGER, &tmp, sizeof(tmp));
     }
@@ -289,7 +290,7 @@ void server::deal_read(int sockfd)
 {
     auto timer = m_user_data[sockfd].timer;
     /*reactor，主线程不处理读*/
-    if (m_actmodel)
+    if (m_reactor_model)
     {
         if (timer)
         {
@@ -336,7 +337,7 @@ void server::deal_write(int sockfd)
 {
     auto timer = m_user_data[sockfd].timer;
     /*reactor，主线程不处理读*/
-    if (m_actmodel)
+    if (m_reactor_model)
     {
         if (timer)
         {
