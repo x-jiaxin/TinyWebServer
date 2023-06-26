@@ -5,16 +5,12 @@
 #ifndef TINYWEBSERVER_LOG_H
 #define TINYWEBSERVER_LOG_H
 
-#include <iostream>
 #include <ctime>
 #include <cstring>
 #include <cstdarg>
 #include <sys/time.h>
 #include "lock.h"
 #include "block_queue.h"
-using std::cin;
-using std::cout;
-using std::endl;
 using std::string;
 class Log
 {

@@ -62,8 +62,8 @@ public:
     int m_listen_fd;
     int m_linger;
     int m_trigmode;
-    int m_listentrigmode;
-    int m_conntrigmode;
+    int m_listenET;
+    int m_connET;
 
     client_data *m_user_data;
     Utils utils;

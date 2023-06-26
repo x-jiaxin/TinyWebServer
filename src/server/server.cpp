@@ -87,26 +87,26 @@ void server::trig_mode()
     /*LT + LT*/
     if (m_trigmode == 0)
     {
-        m_listentrigmode = 0;
-        m_conntrigmode = 0;
+        m_listenET = 0;
+        m_connET = 0;
     }
     /*LT + ET*/
     else if (m_trigmode == 1)
     {
-        m_listentrigmode = 0;
-        m_conntrigmode = 1;
+        m_listenET = 0;
+        m_connET = 1;
     }
     /*ET + LT*/
     else if (m_trigmode == 2)
     {
-        m_listentrigmode = 1;
-        m_conntrigmode = 0;
+        m_listenET = 1;
+        m_connET = 0;
     }
     /*ET + ET*/
     else if (m_trigmode == 3)
     {
-        m_listentrigmode = 1;
-        m_conntrigmode = 1;
+        m_listenET = 1;
+        m_connET = 1;
     }
 }
 
@@ -146,7 +146,7 @@ void server::eventListen()
     m_epollfd = epoll_create(5);
     assert(m_epollfd != -1);
 
-    utils.addfd(m_epollfd, m_listen_fd, false, m_listentrigmode);
+    utils.addfd(m_epollfd, m_listen_fd, false, m_listenET);
     http_conn::m_epollfd = m_epollfd;
 
     /*统一事件源*/
@@ -166,8 +166,8 @@ void server::eventListen()
 /*创建定时器*/
 void server::timer(int connfd, const sockaddr_in &client_address)
 {
-    users[connfd].init(connfd, client_address, m_root, m_conntrigmode,
-                       m_close_log, m_sql_username, m_sql_passwd, m_sql_dbname);
+    users[connfd].init(connfd, client_address, m_root, m_connET, m_close_log,
+                       m_sql_username, m_sql_passwd, m_sql_dbname);
     //初始化client_data数据
     //创建定时器，设置回调函数和超时时间，绑定用户数据，将定时器添加到链表中
     m_user_data[connfd].client_address = client_address;
@@ -211,7 +211,7 @@ bool server::deal_clientdata()
 {
     sockaddr_in client_address{};
     socklen_t sz = sizeof(client_address);
-    if (0 == m_listentrigmode)
+    if (0 == m_listenET)
     {
         //LT监听
         int connfd = accept(m_listen_fd, (sockaddr *)&client_address, &sz);

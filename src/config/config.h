@@ -23,10 +23,6 @@ public:
 
     int TRIGMode;
 
-    int LISTENTrigmode;
-
-    int CONNTrigmode;
-
     int OPT_LINGER;
 
     int sql_num;

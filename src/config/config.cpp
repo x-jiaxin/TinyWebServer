@@ -11,14 +11,8 @@ config::config()
     /*日志写入方式默认同步*/
     ASYN_LOGWrite = 0;
 
-    /*Listenfd LT + connfd LT*/
+    /*Listenfd LT  connfd LT*/
     TRIGMode = 0;
-
-    /*listenfd触发模式，默认LT*/
-    LISTENTrigmode = 0;
-
-    /*connfd触发模式，默认LT*/
-    CONNTrigmode = 0;
 
     /*保持连接*/
     OPT_LINGER = 0;
