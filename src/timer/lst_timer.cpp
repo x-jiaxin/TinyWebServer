@@ -27,6 +27,7 @@ void sort_timer_lst::add_timer(util_timer *timer)
     if (!head)
     {
         head = timer;
+        tail = timer;
         return;
     }
     //链表升序
@@ -143,7 +144,7 @@ void sort_timer_lst::add_timer(util_timer *timer, util_timer *lst_head)
     util_timer *pre = lst_head, *tmp = lst_head->next;
     while (tmp)
     {
-        if (tmp->expire > timer->expire)
+        if (tmp->expire < timer->expire)
         {
             pre->next = timer;
             timer->prev = pre;
