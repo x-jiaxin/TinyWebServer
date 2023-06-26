@@ -64,7 +64,7 @@ public:
     int m_listentrigmode;
     int m_conntrigmode;
 
-    client_data *user_timer;
+    client_data *m_user_data;
     Utils utils;
 };
 

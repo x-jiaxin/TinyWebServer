@@ -6,7 +6,7 @@
 server::server()
 {
     users = new http_conn[MAX_FD];
-    user_timer = new client_data[MAX_FD];
+    m_user_data = new client_data[MAX_FD];
 
     char path[200];
     strcpy(m_root, getcwd(path, 200));
@@ -16,7 +16,7 @@ server::server()
 
 server::~server()
 {
-    delete[] user_timer;
+    delete[] m_user_data;
     delete[] users;
     delete m_thread_pool;
     close(m_listen_fd);
@@ -161,14 +161,14 @@ void server::timer(int connfd, const sockaddr_in &client_address)
                        m_close_log, m_sql_username, m_sql_passwd, m_sql_dbname);
     //初始化client_data数据
     //创建定时器，设置回调函数和超时时间，绑定用户数据，将定时器添加到链表中
-    user_timer[connfd].client_address = client_address;
-    user_timer[connfd].sockfd = connfd;
+    m_user_data[connfd].client_address = client_address;
+    m_user_data[connfd].sockfd = connfd;
     auto *timer = new util_timer;
-    timer->user_data = &user_timer[connfd];
+    timer->user_data = &m_user_data[connfd];
     timer->cb_func = cb_func;
     time_t cur = time(nullptr);
     timer->expire = cur + 3 * TIMESLOT;
-    user_timer[connfd].timer = timer;
+    m_user_data[connfd].timer = timer;
     utils.m_time_list.add_timer(timer);
 }
 
@@ -187,9 +187,9 @@ void server::deal_timer(util_timer *timer, int sockfd)
 {
     if (timer)
     {
-        timer->cb_func(&user_timer[sockfd]);
+        timer->cb_func(&m_user_data[sockfd]);
         utils.m_time_list.delete_timer(timer);
-        LOG_INFO("close fd %d", user_timer[sockfd].sockfd)
+        LOG_INFO("close fd %d", m_user_data[sockfd].sockfd)
     }
     else
     {
@@ -242,8 +242,85 @@ bool server::deal_clientdata()
     return true;
 }
 
-bool server::deal_signal(bool &timeout, bool &stop_server) {}
-void server::deal_read(int sockfd) {}
+/*通过统一事件源从管道获得的信号值*/
+bool server::deal_signal(bool &timeout, bool &stop_server)
+{
+    char signals[1024];
+    int ret = (int)recv(m_pipefd[0], signals, sizeof(signals), 0);
+    if (ret <= 0)
+    {
+        return false;
+    }
+    else
+    {
+        for (int i = 0; i < ret; ++i)
+        {
+            switch (signals[i])
+            {
+                case SIGALRM:
+                {
+                    /*超时信号*/
+                    timeout = true;
+                    break;
+                }
+                case SIGTERM:
+                {
+                    /*终止信号*/
+                    stop_server = true;
+                    break;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+void server::deal_read(int sockfd)
+{
+    auto timer = m_user_data[sockfd].timer;
+    /*reactor，主线程不处理读*/
+    if (m_actmodel)
+    {
+        if (timer)
+        {
+            adjust_timer(timer);
+        }
+        /*读0，写1*/
+        m_thread_pool->append(users + sockfd, 0);
+
+        while (true)
+        {
+            if (1 == users[sockfd].improv)
+            {
+                if (1 == users[sockfd].timer_flag)
+                {
+                    deal_timer(timer, sockfd);
+                    users[sockfd].timer_flag = 0;
+                }
+                users[sockfd].improv = 0;
+                break;
+            }
+        }
+    }
+    /*proactor，主线程处理读*/
+    else
+    {
+        if (users[sockfd].read_once())
+        {
+            LOG_INFO("deal with the client(%s)",
+                     inet_ntoa(users[sockfd].getaddress()->sin_addr))
+            m_thread_pool->append(users + sockfd, 0);
+            if (timer)
+            {
+                adjust_timer(timer);
+            }
+        }
+        else
+        {
+            deal_timer(timer, sockfd);
+        }
+    }
+}
 
 void server::deal_write(int sockfd) {}
 
