@@ -3,6 +3,7 @@
 //
 
 #include <getopt.h>
+#include <cstdlib>
 #include "config.h"
 config::config()
 {

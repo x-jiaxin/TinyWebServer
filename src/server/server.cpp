@@ -360,7 +360,7 @@ void server::deal_write(int sockfd)
             }
         }
     }
-    /*proactor，主线程处理读*/
+    /*proactor，主线程处理写*/
     else
     {
         if (users[sockfd].write())

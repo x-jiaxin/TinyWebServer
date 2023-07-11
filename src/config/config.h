@@ -5,10 +5,6 @@
 #ifndef TINYWEBSERVER_CONFIG_H
 #define TINYWEBSERVER_CONFIG_H
 
-#include <iostream>
-using std::cin;
-using std::cout;
-using std::endl;
 class config
 {
 public:

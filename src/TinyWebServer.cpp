@@ -2,12 +2,8 @@
 // Created by jiaxin on 2023/6/25 16:18.
 //
 
-#include <iostream>
 #include <server.h>
 #include <config.h>
-using std::cin;
-using std::cout;
-using std::endl;
 
 int main(int argc, char *argv[])
 {

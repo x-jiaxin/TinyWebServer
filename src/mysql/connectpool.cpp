@@ -102,8 +102,7 @@ void connectpool::init(const string &url, const string &username,
         con = mysql_init(con);
         if (!con)
         {
-            //            LOG_ERROR("MySQL Error");
-            cout << "Mysql error!\n";
+            LOG_ERROR("MySQL Error")
             exit(1);
         }
         con = mysql_real_connect(con, url.c_str(), username.c_str(),
@@ -112,7 +111,7 @@ void connectpool::init(const string &url, const string &username,
         if (!con)
         {
             // log
-            cout << "MySQL error!\n";
+            LOG_ERROR("MySQL Error")
             exit(1);
         }
         m_connList.push_back(con);

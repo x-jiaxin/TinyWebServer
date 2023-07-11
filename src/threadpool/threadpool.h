@@ -5,12 +5,8 @@
 #ifndef TINYWEBSERVER_THREADPOOL_H
 #define TINYWEBSERVER_THREADPOOL_H
 
-#include <iostream>
 #include "lock.h"
 #include "connectpool.h"
-using std::cin;
-using std::cout;
-using std::endl;
 
 /**
  * 半同步/半反应堆线程池\n

@@ -12,9 +12,6 @@
 #include <csignal>
 #include <cassert>
 #include <http_conn.h>
-using std::cin;
-using std::cout;
-using std::endl;
 
 class util_timer;
 

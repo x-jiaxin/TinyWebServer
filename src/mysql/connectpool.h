@@ -5,13 +5,11 @@
 #ifndef TINYWEBSERVER_CONNECTPOOL_H
 #define TINYWEBSERVER_CONNECTPOOL_H
 
-#include <iostream>
 #include <mysql/mysql.h>
+#include <string>
 #include "lock.h"
+#include "log.h"
 #include <list>
-using std::cin;
-using std::cout;
-using std::endl;
 using std::list;
 using std::string;
 
@@ -75,7 +73,7 @@ class connectionRAII
 {
 public:
     connectionRAII(MYSQL **connRaii, connectpool *sqlpollRaii);
-    virtual ~connectionRAII();
+    ~connectionRAII();
 
 private:
     MYSQL *connRAII;

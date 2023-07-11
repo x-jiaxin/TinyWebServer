@@ -5,12 +5,8 @@
 #ifndef TINYWEBSERVER_BLOCK_QUEUE_H
 #define TINYWEBSERVER_BLOCK_QUEUE_H
 
-#include <iostream>
 #include "lock.h"
 #include <cassert>
-using std::cin;
-using std::cout;
-using std::endl;
 /**循环数组实现的阻塞队列，m_back = (m_back + 1) % m_max_size;
  * \n 线程安全
  */

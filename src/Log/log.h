@@ -7,6 +7,7 @@
 
 #include <ctime>
 #include <cstring>
+#include <string>
 #include <cstdarg>
 #include <sys/time.h>
 #include "lock.h"
